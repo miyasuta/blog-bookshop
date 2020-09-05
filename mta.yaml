@@ -1,0 +1,132 @@
+## Generated mta.yaml based on template version 0.4.0
+## appName = bookshop
+## language=nodejs; multiTenant=false
+## approuter=
+_schema-version: '3.1'
+ID: bookshop
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+   
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install --production
+      - npx -p @sap/cds-dk cds build --production
+
+modules:
+ - name: bookshop-app-router
+   type: approuter.nodejs
+   path: approuter
+   parameters:
+     disk-quota: 512M
+     memory: 512M
+   requires:
+     - name: bookshop_uaa
+     - name: bookshop_html5_repo_runtime
+     - name: bookshop_portal
+     - name: srv-api
+       group: destinations
+       properties:
+         name: srv-api
+         url: "~{srv-url}"
+         forwardAuthToken: true  
+         
+ - name: bookshop_ui_deployer
+   type: com.sap.application.content
+   path: deployer
+   requires:
+     - name: bookshop_html5_repo_host
+       parameters:
+         content-target: true
+   build-parameters:
+     build-result: resources
+     requires:
+       - name: bookshopapp
+         artifacts:
+           - dist/uimodule.zip
+         target-path: resources/
+ - name: bookshopapp
+   type: html5
+   path: bookshopapp
+   build-parameters:
+     builder: custom
+     commands:
+       - npm install
+       - npm run build
+     supported-platforms: []
+
+ - name: bookshop_launchpad_deployer
+   type: com.sap.portal.content
+   path: launchpad
+   deployed-after:
+     - bookshop_ui_deployer
+   requires:
+     - name: bookshop_portal
+     - name: bookshop_html5_repo_host
+     - name: bookshop_uaa        
+
+ # --------------------- SERVER MODULE ------------------------
+ - name: bookshop-srv
+ # ------------------------------------------------------------
+   type: nodejs
+   path: gen/srv
+   requires:
+    # Resources extracted from CAP configuration
+    - name: bookshop-db
+   provides:
+    - name: srv-api      # required by consumers of CAP services (e.g. approuter)
+      properties:
+        srv-url: ${default-url}
+
+ # -------------------- SIDECAR MODULE ------------------------
+ - name: bookshop-db-deployer
+ # ------------------------------------------------------------
+   type: hdb
+   path: gen/db  
+   parameters:
+     buildpack: nodejs_buildpack
+   requires:
+    # 'hana' and 'xsuaa' resources extracted from CAP configuration
+    - name: bookshop-db
+
+
+resources:
+ # services extracted from CAP configuration
+ # 'service-plan' can be configured via 'cds.requires.<name>.vcap.plan'
+# ------------------------------------------------------------
+ - name: bookshop-db
+# ------------------------------------------------------------
+   type: com.sap.xs.hdi-container
+   parameters:
+     service: hanatrial  # or 'hanatrial' on trial landscapes
+     service-plan: hdi-shared
+   properties:
+     hdi-service-name: ${service-name}
+
+ - name: bookshop_uaa
+   type: org.cloudfoundry.managed-service
+   parameters:
+     path: ./xs-security.json
+     service-plan: application
+     service: xsuaa
+ - name: bookshop_html5_repo_runtime
+   type: org.cloudfoundry.managed-service
+   parameters:
+     service-plan: app-runtime
+     service: html5-apps-repo
+ - name: bookshop_html5_repo_host
+   type: org.cloudfoundry.managed-service
+   parameters:
+     service-plan: app-host
+     service: html5-apps-repo
+     config:
+       sizeLimit: 1
+ - name: bookshop_portal
+   type: org.cloudfoundry.managed-service
+   parameters:
+     service-plan: standard
+     service: portal     
+

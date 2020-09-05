@@ -1,0 +1,15 @@
+{
+    "welcomeFile": "/cp.portal",
+    "authenticationMethod": "route",
+    "logout": {
+      "logoutEndpoint": "/do/logout"
+    },
+    "routes": [
+        {
+            "source": "^/v2/catalog/(.*)$",
+            "authenticationType": "none",
+            "destination": "srv-api",
+            "csrfProtection": false
+        }
+     ]
+  }

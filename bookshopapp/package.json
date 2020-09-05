@@ -1,0 +1,44 @@
+{
+	"name": "bookshopapp",
+	"version": "0.0.1",
+	"private": true,
+	"sapux": true,
+	"description": "Bookshop App",
+	"keywords": [
+		"ui5",
+		"openui5",
+		"sapui5"
+	],
+	"main": "webapp/index.html",
+	"scripts": {
+		"postinstall": "npm i @sap/ux-ui5-tooling@\"^1.0.0\" @sap/ux-specification@\"^1.76.12\" --save-dev --save-exact=false",
+		"start": "fiori run --open test/flpSandbox.html#masterDetail-display",
+		"start-mock": "fiori run --open test/flpSandboxMockServer.html#masterDetail-display",
+		"start-local": "fiori run --config ./ui5-local.yaml --open test/flpSandboxMockServer.html#masterDetail-display",
+		"build": "rimraf dist && ui5 build -a --include-task=generateManifestBundle generateCachebusterInfo",
+		"deploy": "fiori add deploy-config"
+	},
+	"remarkConfig": {
+		"plugins": [
+			"remark-preset-lint-consistent"
+		]
+	},
+	"devDependencies": {
+		"@sap/ux-specification": "^1.78.8",
+		"@sap/ux-ui5-tooling": "^1.0.16",
+		"@ui5/cli": "2.3.2",
+		"@ui5/fs": "2.0.1",
+		"@ui5/logger": "2.0.0",
+		"rimraf": "3.0.0",
+		"ui5-task-zipper": "0.3.1"
+	},
+	"optionalDependencies": {
+		"fsevents": "1.2.9"
+	},
+	"ui5": {
+		"dependencies": [
+			"@sap/ux-ui5-tooling",
+			"ui5-task-zipper"
+		]
+	}
+}
